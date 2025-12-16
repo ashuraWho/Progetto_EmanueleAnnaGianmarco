@@ -66,15 +66,19 @@ def main():
                     continue
 
                 # Addestra/aggiorna modello
-                print("\n[ML] Addestramento/aggiornamento modello in corso...")
+                print("\n[INFO] Addestramento/aggiornamento modello in corso...")
                 model = train_model(state)
 
                 if model is None:
-                    print("[ML] Non ci sono abbastanza dati (almeno un like e un dislike) per addestrare il modello.")
+                    print("[WARNING] Non ci sono abbastanza dati (almeno un like e un dislike) per addestrare il modello.")
                     continue
 
-                print("[ML] Modello addestrato con successo!")
-                print_feature_importance(state, top_k=5)
+                if state["model_type"] == "rf":
+                    print("[INFO] Modello ML (Random Forest) addestrato.")
+                    print_feature_importance(state, top_k=5)
+                else:
+                    print("[INFO] Modello DL (MLP) addestrato.")
+                    print("[INFO] DL non ha feature_importance disponibile.")
 
                 # Pool di candidate (esclude già viste)
                 candidate_df = df[~df["track_id"].isin(seen_tracks)]
