@@ -88,13 +88,13 @@ def build_model(model_type: str, n_samples: int):
     
 def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionario quando vado a salvare i feedback
     
-    if state["user_history"]["label"].nunique() < 2: # senza due classi diverse non vado ad addestrare nulla
+    if state["user_history"]["vote"].nunique() < 2: # senza due classi diverse non vado ad addestrare nulla
         state["model"] = None
         return None
     
     # X = feature numeriche dei brani votati | y = (0/1)
     X = state["user_history"][state["feature_cols"]]
-    y = state["user_history"]["label"].astype(int)
+    y = state["user_history"]["vote"].astype(int)
     
     # Switch automatico del modello
     model_type = "rf" if len(state["user_history"]) < 20 else "mlp" # uso RF di default e abilito MLP solo dopo 20 voti
