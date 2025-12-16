@@ -96,11 +96,12 @@ def main():
 
                 # Segna la canzone come vista
                 seen_tracks.add(song_row["track_id"])
+                
+                # ------->>>>>>> Qua va aggiunto il voto a user_history <<<<<--------
 
                 # Log voto
                 print(f"\nHai votato '{song_row['track_name']}' di {song_row['artists']} con voto = {vote}")
                 print(f"Canzoni sentite totali: {len(seen_tracks)}")
-
 
             case "0":
                 print("\nUscita dal programma. A presto! 👋")
