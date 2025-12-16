@@ -104,7 +104,7 @@ def main():
                 print(f"Canzoni sentite totali: {len(seen_tracks)}")
 
             case "0":
-                print("\nUscita dal programma. A presto! 👋")
+                print("\nUscita dal programma. A presto!")
                 break
 
             case _:
