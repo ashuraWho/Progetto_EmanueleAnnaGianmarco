@@ -66,7 +66,7 @@ def build_model(model_type: str, n_samples: int):
     else:
         clf = RandomForestClassifier(
             n_estimators = 200, # numero di alberi
-            max_depth = max(3, min(8, n_samples // 2))  # profondità adattiva in base ai campioni disponibili
+            max_depth = max(3, min(8, n_samples // 2)), # profondità adattiva in base ai campioni disponibili (min 3, max 8)
             min_samples_leaf = 2, # vado a ridurre l'overfitting impedendo foglie con un solo campione
             class_weight = "balanced",
             random_state = 42
@@ -86,9 +86,10 @@ def build_model(model_type: str, n_samples: int):
     -> dopo ogni nuovo feedback, il modello viene riaddestrato per incorporare la nuova informazione
 """
     
-def train_model(state): # qui (state) me lo sono immaginato come diziomnario quando vado a salvare i feedback
+def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionario quando vado a salvare i feedback
     
     if state["user_history"]["label"].nunique() < 2: # senza due classi diverse non vado ad addestrare nulla
+        state["model"] = None
         return None
     
     # X = feature numeriche dei brani votati | y = (0/1)
@@ -99,10 +100,11 @@ def train_model(state): # qui (state) me lo sono immaginato come diziomnario qua
     model_type = "rf" if len(state["user_history"]) < 20 else "mlp" # uso RF di default e abilito MLP solo dopo 20 voti
     state["model_type"] = model_type
     
-    pipeline = build_model(state["model_type"]) # vado a costruire il modello richiesto (RF o MLP) con scaler
+    pipeline = build_model(state["model_type"], len(state["user_history"])) # vado a costruire il modello richiesto (RF o MLP) con scaler
     pipeline.fit(X, y) # addestramento supervisionato sui feedback raccolti
     
     state["model"] = pipeline # salvo il modello addestrato
+    
     return pipeline # restituisco il modello addestrato
 
 
@@ -115,10 +117,14 @@ def train_model(state): # qui (state) me lo sono immaginato come diziomnario qua
         - massima incertezza (p circa 0.5) -> per esplorare meglio (exploration)
  """
     
-def select_next_song(state, candidate_df, exploration_rate=0.3):
+def select_next_song(state: Dict, candidate_df: pd.DataFrame, exploration_rate=0.3):
     # state -> contiene il modello, le feature, storico dell'utente
 	# candidate_df -> canzoni non ancora ascoltate
 	# exploration_rate = 0.3 -> 30% delle volte esploro, 70% sfrutto
+ 
+    # Non ci sono più canzoni da proporre
+    if candidate_df.empty:
+        return None
 
     model = state.get("model")
     features = state["feature_cols"]
@@ -135,7 +141,8 @@ def select_next_song(state, candidate_df, exploration_rate=0.3):
     # Scelgo se esplorare o sfruttare -> il 30% delle volte entra qui
     if np.random.rand() < exploration_rate:
         # Exploration -> modello impara più velocemente
-        candidate_df["uncertainty"] = np.abs(candidate_df["like_prob"] - 0.5) # ho incertezza massima quando p è vicino a 0.5
+        # uncertainty = distanza dalla decision boundary (p = 0.5)
+        candidate_df["uncertainty"] = np.abs(candidate_df["like_prob"] - 0.5) # ho incertezza massima quando p è vicino a 0.5 (decision boundary)
         return candidate_df.sort_values("uncertainty").head(1) # scelgo la canzone su cui il modello è più indeciso
 
     # Exploitation -> massima confidenza
@@ -146,12 +153,12 @@ def select_next_song(state, candidate_df, exploration_rate=0.3):
 # ============================ FUNZIONE FEATURE IMPORTANCE ============================
 
 """
-    Stampo le top 4 feature più importanti (solo per RF)
+    Stampo le top features più importanti (solo per RF)
     
         -> aiuta a capire che pattern sta apprendendo il modello
 """
     
-def print_feature_importance(state):
+def print_feature_importance(state: Dict, top_k=4):
     
     model = state.get("model")
     
@@ -164,7 +171,7 @@ def print_feature_importance(state):
         return
     
     importances = pd.Series(clf.feature_importances_, index=state["feature_cols"]).sort_values(ascending=False)
-    top = importances.head(4)
+    top = importances.head(top_k)
     formatted = ", ".join([f"{feat} ({score:.2f})" for feat, score in top.items()])
     
     print(f"[Insight] Sto dando più peso a: {formatted}")
@@ -174,7 +181,7 @@ def print_feature_importance(state):
 # ================================= FUNZIONE FEEDBACK ================================
 
 """
-    Aggiungiamo al log utente (la history) le feature del brano proposto con l’etichetta
+    Aggiungiamo al log utente (la history) le features del brano proposto con l’etichetta
 """
 
 def save_feedback(state: Dict, song: pd.Series, label: int):
