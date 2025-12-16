@@ -175,22 +175,3 @@ def print_feature_importance(state: Dict, top_k=4):
     formatted = ", ".join([f"{feat} ({score:.2f})" for feat, score in top.items()])
     
     print(f"[Insight] Sto dando più peso a: {formatted}")
-
-
-# ------------------------------------------------------------------------------------
-# ================================= FUNZIONE FEEDBACK ================================
-
-"""
-    Aggiungiamo al log utente (la history) le features del brano proposto con l’etichetta
-"""
-
-def save_feedback(state: Dict, song: pd.Series, label: int):
-    
-    record = song[state["meta_cols"] + state["feature_cols"]].copy()
-    record["label"] = label
-    
-    state["user_history"] = pd.concat(
-        [state["user_history"],
-         pd.DataFrame([record])],
-        ignore_index=True
-    )
