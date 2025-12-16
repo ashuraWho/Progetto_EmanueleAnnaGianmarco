@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Importo le funzioni dal modulo cold_start
-from cold_start import load_dataset, cold_start
+from anna.cold_start_file import load_dataset, cold_start
 
 
 def main():
