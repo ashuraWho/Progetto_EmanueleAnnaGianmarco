@@ -9,7 +9,7 @@
 import pandas as pd
 
 # Importo le funzioni dal modulo cold_start
-from faseA_anna import load_dataset, cold_start, FEATURE_COLUMNS, DISPLAY_COLUMNS
+from faseA_anna import load_dataset, cold_start, ask_user_vote, FEATURE_COLUMNS, DISPLAY_COLUMNS
 from fasiBC import train_model, select_next_song, print_feature_importance
 
 
@@ -66,7 +66,15 @@ def main():
                     continue
 
                 # Addestra/aggiorna modello
-                train_model(state)
+                print("\n[ML] Addestramento/aggiornamento modello in corso...")
+                model = train_model(state)
+
+                if model is None:
+                    print("[ML] Non ci sono abbastanza dati (almeno un like e un dislike) per addestrare il modello.")
+                    continue
+
+                print("[ML] Modello addestrato con successo!")
+                print_feature_importance(state, top_k=5)
 
                 # Pool di candidate (esclude già viste)
                 candidate_df = df[~df["track_id"].isin(seen_tracks)]
@@ -80,12 +88,15 @@ def main():
                 song_row = next_song.iloc[0]
 
                 # Mostra info e chiedi voto
-                vote = cold_start.ask_user_vote(song_row) if hasattr(cold_start, "ask_user_vote") else int(input(f"Ti piace '{song_row['track_name']}'? (1=Sì, 0=No): "))
+                vote = ask_user_vote(song_row)
 
                 # Segna la canzone come vista
                 seen_tracks.add(song_row["track_id"])
 
-                print(f"\nHai votato '{song_row['track_name']}' di {song_row['artists']}")
+                # Log voto
+                print(f"\nHai votato '{song_row['track_name']}' di {song_row['artists']} con voto = {vote}")
+                print(f"Canzoni sentite totali: {len(seen_tracks)}")
+
 
             case "0":
                 print("\nUscita dal programma. A presto! 👋")
