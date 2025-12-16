@@ -64,3 +64,53 @@ def ask_user_vote(song: pd.Series) -> int:
         print("Input non valido. Inserisci solo 0 o 1")
 
 
+#Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
+#(df-> dataset completo, n_songs-> numero di canzoni iniziali da votare)
+
+def cold_start(df: pd.DataFrame, n_songs: int = 5):
+
+    print("\n--- 🎧 BENVENUTO NEL TUO AI DJ ---")
+    print(f"Vota {n_songs} canzoni casuali\n")
+
+    # Lista temporanea dove verranno salvate tutte le interazioni con l'utente
+    user_history = []
+
+    # Set per tenere traccia delle canzoni già viste
+    seen_tracks = set()
+
+    # Estraggo le canzoni iniziali
+    sampled_songs = sample_songs(df, seen_tracks, n_songs)
+
+    # Ciclo sulle canzoni estratte
+    for i, (_, song) in enumerate(sampled_songs.iterrows(), start=1):
+
+        print(f"\n[Voto {i}/{n_songs}]")
+
+        # Chiedo il voto all'utente
+        vote = ask_user_vote(song)
+
+        # Segno la canzone come già poposta
+        seen_tracks.add(song["track_id"])
+
+        # Creo i dati da salvare
+        entry = {
+            "track_id": song["track_id"],
+            "track_name": song["track_name"],
+            "artists": song["artists"],
+            "vote": vote
+        }
+
+        # Aggiungo tutte le feature numeriche
+        for feature in FEATURE_COLUMNS:
+            entry[feature] = song[feature]
+
+        # Salvo
+        user_history.append(entry)
+
+    # Converto la lista di dizionari in DataFrame
+    user_history = pd.DataFrame(user_history)
+
+    print("\nCold Start completato!")
+    print(user_history[["track_name", "artists", "vote"]])
+
+    return user_history, seen_tracks #Restituisce:user_history per il training del modello, seen_tracks per evitare ripetizioni
