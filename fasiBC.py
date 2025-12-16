@@ -34,6 +34,8 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 
+from typing import Dict
+
 
 # ------------------------------------------------------------------------------------
 # ================================== FUNZIONE BASE ===================================
