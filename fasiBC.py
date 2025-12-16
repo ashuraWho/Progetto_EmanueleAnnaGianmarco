@@ -18,7 +18,10 @@
 #	-> p circa 0.0 -> “sono quasi sicuro che non ti piaccia :(”
 #	-> p circa 0.5 -> “ah boh :/” -> credo che sia questo caso che fa imparare di più il modello
 #
-# Quindi non posso proporre solo quando p = 1.0 o p = 0.5 -> mi serve una via di mezzo
+# Problema: non posso proporre solo quando p = 1.0 o p = 0.5 -> mi serve una via di mezzo
+# Strategia: uso exploration/exploitation, ovvero:
+#   - exploration: 30% di probabilità scelgo il brano con p più vicino a 0.5
+#   - exploitation: 70% di probabilità scelgo il brano con p più alta
 
 # ===================================================================================
 # ===================================================================================
@@ -30,6 +33,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
+
 
 # ------------------------------------------------------------------------------------
 # ================================== FUNZIONE BASE ===================================
@@ -68,6 +72,7 @@ def build_model(model_type: str, n_samples: int):
         
     return Pipeline([("scaler", MinMaxScaler()), ("clf", clf)]) # Restituisco scaler + modello
 
+
 # ------------------------------------------------------------------------------------
 # ================================== FUNZIONE TRAIN ==================================
 
@@ -97,6 +102,7 @@ def train_model(state): # qui (state) me lo sono immaginato come diziomnario qua
     
     state["model"] = pipeline # salvo il modello addestrato
     return pipeline # restituisco il modello addestrato
+
 
 # ------------------------------------------------------------------------------------
 # ================================ FUNZIONE PREDICT ==================================
@@ -133,7 +139,9 @@ def select_next_song(state, candidate_df, exploration_rate=0.3):
     # Exploitation -> massima confidenza
     return candidate_df.sort_values("like_prob", ascending=False).head(1) # scelgo la canzone con la più alta probabilità di like
 
+
 # ------------------------------------------------------------------------------------
+# ============================ FUNZIONE FEATURE IMPORTANCE ============================
 
 """
     Stampo le top 4 feature più importanti (solo per RF)
@@ -158,3 +166,22 @@ def print_feature_importance(state):
     formatted = ", ".join([f"{feat} ({score:.2f})" for feat, score in top.items()])
     
     print(f"[Insight] Sto dando più peso a: {formatted}")
+
+
+# ------------------------------------------------------------------------------------
+# ================================= FUNZIONE FEEDBACK ================================
+
+"""
+    Aggiungiamo al log utente (la history) le feature del brano proposto con l’etichetta
+"""
+
+def save_feedback(state: Dict, song: pd.Series, label: int):
+    
+    record = song[state["meta_cols"] + state["feature_cols"]].copy()
+    record["label"] = label
+    
+    state["user_history"] = pd.concat(
+        [state["user_history"],
+         pd.DataFrame([record])],
+        ignore_index=True
+    )
