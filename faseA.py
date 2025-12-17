@@ -63,7 +63,7 @@ def ask_user_vote(song: pd.Series) -> int:
 
 def cold_start(df: pd.DataFrame, n_songs: int = 5):
 
-    print("\n--- 🎧 BENVENUTO NEL TUO AI DJ ---")
+    print("\n--- BENVENUTO NEL TUO AI DJ ---")
     print(f"Vota {n_songs} canzoni casuali\n")
 
     # Lista temporanea dove verranno salvate tutte le interazioni con l'utente
