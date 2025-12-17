@@ -170,7 +170,7 @@ La fase di pulizia, analisi ed esplorazione ha prodotto un dataset:
 
 # 📘 Architettura del software (Fase A & Fase B & Fase C & Fase D)
 
-## 🅰️ Fase A – Cold Start (Avvio a Freddo)
+## 🅰️ Fase A – Cold Start (Avvio a Freddo) (Firinu Anna)
 
 ### 🎯 Obiettivo
 
@@ -210,11 +210,45 @@ Questi output costituiscono il **dataset di training iniziale** per le fasi succ
 
 ### 📁 File coinvolti
 
-- `cold_start.py`
+- `faseA.py`
 
 ---
 
-## 🅳 Fase D – Interazione e Feedback Loop
+# Fasi B e C (Emanuele Anzellotti)
+
+## Obiettivo
+
+Le fasi B e C del progetto hanno l’obiettivo di creare un modello di classificazione binaria che impari dai feedback dell’utente e predica la probabilità che un brano venga apprezzato:
+
+$$P(\text{“mi piace”}=1 \mid \text{feature audio})$$
+
+Il sistema è progettato per apprendere in tempo reale, aggiornando il modello dopo ogni voto e suggerendo brani con confidenza crescente o, alternativamente, esplorando quelli più incerti.
+
+## Fase B – Training del modello
+
+1. Input: feedback dell’utente (user_history) con feature audio numeriche e label 0/1.
+2. Condizione pre-addestramento: il modello viene costruito solo se ci sono almeno due classi presenti (almeno un like e un dislike).
+3. Scelta del modello:
+   - Random Forest (RF) -> ideale per dataset piccoli, infatti messo di default.
+   - MLP (Multi-Layer Perceptron) -> abilitato dopo 30 voti.
+4. Pipeline: tutte le feature vengono scalate con MinMaxScaler per uniformità tra RF e MLP.
+5. Training: ogni volta che arriva un nuovo feedback, il modello viene riaddestrato per incorporare la nuova informazione.
+6. Output: pipeline addestrata salvata nello state["model"].
+
+## Fase C – Predizione & Active Learning
+
+1. Input: pool di brani non ancora ascoltati (candidate_df) e modello addestrato.
+2. Predizione: il modello calcola la probabilità di like per ciascun brano.
+3. Exploration/Exploitation:
+   - Exploitation (70%) -> scegliere la canzone con probabilità di like più alta.
+   - Exploration (30%) -> scegliere la canzone con probabilità più vicina a 0.5, dove il modello è più incerto.
+4. Motivazione: proporre brani incerti permette al modello di imparare più velocemente.
+
+### 📁 File coinvolti
+
+- `faseBC.py`
+
+## 🅳 Fase D – Interazione e Feedback Loop (Anna Firinu)
 
 ### 🎯 Obiettivo
 
@@ -247,4 +281,33 @@ Questo meccanismo realizza un ciclo di **Apprendimento Attivo (Active Learning)*
 
 ### 📁 File coinvolti
 
-- `interaction.py`
+- `faseD.py`
+
+# 🔚 Conclusione e Integrazione del Sistema
+
+Oltre alle singole fasi descritte, una parte fondamentale del progetto ha riguardato
+l’**integrazione complessiva del sistema di raccomandazione** e il collegamento tra
+la logica applicativa e i dati preprocessati.
+
+In particolare:
+
+- **Anna Firinu** ed **Emanuele Anzellotti** si sono occupati della **creazione del file main**
+  e dell’**orchestrazione delle diverse fasi del progetto** (Fase A, B, C e D),
+  garantendo un flusso di esecuzione coerente e continuo.
+
+- Il main gestisce:
+
+  - l’avvio del sistema in modalità cold start,
+  - il passaggio progressivo tra raccolta dei feedback, training del modello,
+    predizione e interazione con l’utente,
+  - la condivisione dello stato tra le varie fasi (storico utente, modello, canzoni viste).
+
+- **Emanuele Anzellotti** si è inoltre occupato del **collegamento finale dell’intero sistema
+  al dataset pulito, analizzato e preprocessato**, assicurando che:
+  - le feature selezionate e ingegnerizzate venissero utilizzate correttamente,
+  - lo scaling fosse coerente tra preprocessing ed esecuzione del modello,
+  - il sistema di raccomandazione operasse su dati consistenti e affidabili.
+
+Grazie a questa integrazione, il progetto non si limita a una collezione di moduli separati,
+ma realizza un **sistema completo, modulare e interattivo**, capace di apprendere
+progressivamente dai feedback dell’utente attraverso un ciclo di **Active Learning**.
