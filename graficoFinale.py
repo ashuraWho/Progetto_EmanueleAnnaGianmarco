@@ -11,6 +11,7 @@ from typing import Dict
         - punti rossi : brani con voto 0 (Dislike)
         - sfondo colorato: probabilità di like stimata dal modello (da rosso/basso a verde/alto)
         - curva nera: decision boundary p = 0.5
+        - curva grigia: p = 0.3 e p = 0.7
         
         - uso il modello addestrato per calcolare la probabilità di like
           su una griglia nello spazio (valence, energy)
@@ -71,7 +72,7 @@ def plot_valence_energy_boundary(state: Dict):
     plt.colorbar(cs, label="Probabilità di like")
 
     # Linea di decisione p = 0.5
-    plt.contour(xx, yy, Z, levels=[0.5], colors="black", linewidths=1.5) # decision boundary
+    plt.contour(xx, yy, Z, levels=[0.3, 0.5, 0.7], colors=["grey", "black", "grey"], linewidths=[1, 1.5, 1]) # curva nera per p = 0.5, grigia per 0.3 e 0.7
 
     # Punti reali dell'utente
     if not likes.empty:

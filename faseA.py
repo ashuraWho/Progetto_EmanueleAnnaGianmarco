@@ -1,4 +1,5 @@
 import pandas as pd
+from preprocessing import FINAL_FEATURES, preprocess_dataset
 
 # CONFIGURAZIONE
 
@@ -7,17 +8,8 @@ import pandas as pd
 # - quali colonne verranno usate solo per stampare info all'utente
 
 # Feature numeriche usate dal modello (X)
-FEATURE_COLUMNS = [
-    "danceability",        # Quanto è ballabile la canzone
-    "energy",              # Intensità / carica
-    "speechiness",         # Presenza di parlato
-    "acousticness",        # Quanto è acustica
-    "instrumentalness",    # Quanto è strumentale
-    "liveness",            # Presenza di pubblico
-    "valence",             # Quanto è "felice"
-    "tempo",               # BPM
-    "loudness"             # Volume medio
-]
+# Uso le feature finali (base + derivate) definite nel modulo di preprocessing
+FEATURE_COLUMNS = FINAL_FEATURES
 
 # Colonne informative non usate dal modello
 DISPLAY_COLUMNS = [
@@ -29,10 +21,11 @@ DISPLAY_COLUMNS = [
 #Creo una funzione per caricare il dataset che mi servirà solo in questo momento prima di avere a disposizione
 #la pulizia accurata del dataset
 
-# Carico il dataset CSV e faccio una prima pulizia 
+# Carico il dataset CSV e applico la stessa pipeline di pulizia/feature engineering
+# definita nel notebook `pulizia.ipynb`, incapsulata in `preprocess_dataset`.
 def load_dataset(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
-    df = df.dropna(subset=FEATURE_COLUMNS) #Rimuovo le righe con valori nulli
+    df = preprocess_dataset(df)
 
     return df 
 

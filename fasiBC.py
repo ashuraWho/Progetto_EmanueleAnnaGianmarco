@@ -55,8 +55,14 @@ from typing import Dict
 def build_model(model_type: str, n_samples: int):
     
     if model_type == "mlp":
+
+        if n_samples < 200:
+            hidden = (16,) # architettura più semplice per pochi dati
+        else:
+            hidden = (32, 16) # architettura più complessa per più dati
+      
         clf = MLPClassifier(
-            hidden_layer_sizes = (32, 16), # due hidden layer da 32 e 16 neuroni -> ho una capacità di apprendimento moderata
+            hidden_layer_sizes = hidden, # architettura adattiva in base ai campioni disponibili
             activation = "relu", # attivazione ReLU (Rectified Linear Unit) -> per catturare non-linearità complesse
             solver = "adam", # ottimizzatore stocastico adattivo -> Adam gestisce il learning rate da solo
             max_iter = 300,
@@ -102,7 +108,10 @@ def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionari
     y = state["user_history"]["vote"].astype(int)
     
     # Switch automatico del modello
-    model_type = "rf" if len(state["user_history"]) < 30 else "mlp" # uso RF di default e abilito MLP solo dopo 30 voti
+    n_like = (state["user_history"]["vote"] == 1).sum()
+    n_dislike = (state["user_history"]["vote"] == 0).sum()
+
+    model_type = "rf" if len(state["user_history"]) < 80 or n_like < 15 or n_dislike < 15 else "mlp" # uso RF di default e abilito MLP solo se ho abbastanza dati
     state["model_type"] = model_type
     
     pipeline = build_model(state["model_type"], len(state["user_history"])) # vado a costruire il modello richiesto (RF o MLP) con scaler

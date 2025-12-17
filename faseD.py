@@ -1,10 +1,9 @@
 import pandas as pd
+from preprocessing import FINAL_FEATURES
 
-# Importo le stesse feature usate nella Fase A
-FEATURE_COLUMNS = [
-    "danceability", "energy", "speechiness", "acousticness",
-    "instrumentalness", "liveness", "valence", "tempo", "loudness"
-]
+# Importo le stesse feature usate nella Fase A (base + derivate)
+FEATURE_COLUMNS = FINAL_FEATURES
+
 
 # Creo la funzione interaction_step che mostra la canzone suggerita, chiede il voto reale all'utente, aggiorna user_history e seen_tracks
 #(song:canzone consigliata, confidence:probabilità che piaccia,user_history:DataFrame con lo storico utente, seen_tracks: set con track_id già ascoltati)
