@@ -8,16 +8,9 @@
 
 import pandas as pd
 
-# Importo le funzioni dal modulo cold_start
-from faseA_anna import load_dataset, cold_start, ask_user_vote, FEATURE_COLUMNS, DISPLAY_COLUMNS
-from fasiBC import train_model, select_next_song, print_feature_importance
-
-
-import pandas as pd
-
-# Importo le funzioni dai moduli
-from faseA_anna import load_dataset, cold_start, FEATURE_COLUMNS, DISPLAY_COLUMNS
-from fasiBC import train_model, select_next_song, print_feature_importance
+from faseA_anna import load_dataset, cold_start, FEATURE_COLUMNS
+from fasiBC_emanuele import train_model, select_next_song, print_feature_importance
+from faseD_anna import interaction_step
 
 
 def main():
@@ -60,55 +53,61 @@ def main():
                 print(user_history[["track_name", "artists", "vote"]])
                 print("\nNumero canzoni viste:", len(seen_tracks))
 
+
             case "2":
                 if state is None:
                     print("Devi prima fare il Cold Start!")
                     continue
 
-                # Addestra/aggiorna modello
-                print("\n[INFO] Addestramento/aggiornamento modello in corso...")
-                model = train_model(state)
+                # Loop fino a Invio
+                while True:
+                    # Addestra/aggiorna modello
+                    print("\n[INFO] Addestramento/aggiornamento modello in corso...")
+                    model = train_model(state)
 
-                if model is None:
-                    print("[WARNING] Non ci sono abbastanza dati (almeno un like e un dislike) per addestrare il modello.")
-                    continue
+                    if model is None:
+                        print("[WARNING] Non ci sono abbastanza dati (almeno un like e un dislike) per addestrare il modello.")
+                        break
 
-                if state["model_type"] == "rf":
-                    print("[INFO] Modello ML (Random Forest) addestrato.")
-                    print_feature_importance(state, top_k=5)
-                else:
-                    print("[INFO] Modello DL (MLP) addestrato.")
-                    print("[INFO] DL non ha feature_importance disponibile.")
+                    if state["model_type"] == "rf":
+                        print("[INFO] Modello ML (Random Forest) addestrato.")
+                        print_feature_importance(state, top_k=5)
+                    else:
+                        print("[INFO] Modello DL (MLP) addestrato.")
+                        print("[INFO] DL non ha feature_importance disponibile.")
 
-                # Pool di candidate (esclude già viste)
-                candidate_df = df[~df["track_id"].isin(seen_tracks)]
+                    # Pool di candidate -> esclude già viste
+                    candidate_df = df[~df["track_id"].isin(seen_tracks)]
 
-                next_song = select_next_song(state, candidate_df)
+                    next_song = select_next_song(state, candidate_df)
 
-                if next_song is None or next_song.empty:
-                    print("Non ci sono più canzoni disponibili!")
-                    continue
+                    if next_song is None or next_song.empty:
+                        print("Non ci sono più canzoni disponibili!")
+                        break
 
-                song_row = next_song.iloc[0]
+                    song_row = next_song.iloc[0]
 
-                # Mostra info e chiedi voto
-                vote = ask_user_vote(song_row)
+                    # Mostro info, chiedo il voto e aggiorno storico + viste
+                    confidence = song_row.get("like_prob", 0.5)
+                    state["user_history"], seen_tracks, vote = interaction_step(
+                        song_row, confidence, state["user_history"], seen_tracks
+                    )
 
-                # Segna la canzone come vista
-                seen_tracks.add(song_row["track_id"])
-                
-                # ------->>>>>>> Qua va aggiunto il voto a user_history <<<<<--------
+                    # Se l'utente preme Invio, esco dal loop
+                    if vote is None:
+                        break
 
-                # Log voto
-                print(f"\nHai votato '{song_row['track_name']}' di {song_row['artists']} con voto = {vote}")
-                print(f"Canzoni sentite totali: {len(seen_tracks)}")
+                    # Log voto
+                    print(f"Canzoni sentite totali: {len(seen_tracks)}")
+
 
             case "0":
                 print("\nUscita dal programma. A presto!")
                 break
 
+
             case _:
-                print("Scelta non valida. Riprova.")
+                print("\nScelta non valida. Riprova.")
 
 
 if __name__ == "__main__":

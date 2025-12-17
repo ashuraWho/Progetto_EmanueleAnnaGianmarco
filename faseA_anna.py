@@ -42,8 +42,9 @@ def sample_songs(df: pd.DataFrame, seen_tracks: set, n: int) -> pd.DataFrame:
     # Filtro il dataset escludendo le canzoni già ascoltate
     available_songs = df[~df["track_id"].isin(seen_tracks)]
 
-    # Estraggo n canzoni casuali
-    return available_songs.sample(n=n)
+    # Estraggo n canzoni casuali (se ne restano meno di n, prendo tutto)
+    n_sample = min(n, len(available_songs))
+    return available_songs.sample(n=n_sample) if n_sample > 0 else available_songs.head(0)
 
 
 #Creo una nuova funzione che chiede all'utente un voto per ogni singola canzone

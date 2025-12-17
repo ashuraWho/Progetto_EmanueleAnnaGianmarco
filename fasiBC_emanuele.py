@@ -60,6 +60,8 @@ def build_model(model_type: str, n_samples: int):
             activation = "relu", # attivazione ReLU (Rectified Linear Unit) -> per catturare non-linearità complesse
             solver = "adam", # ottimizzatore stocastico adattivo -> Adam gestisce il learning rate da solo
             max_iter = 300,
+            early_stopping=True, # interrompe l'addestramento se non migliora
+            n_iter_no_change=15, # numero di iterazioni senza miglioramento per early stopping
             random_state = 42
         )
         
