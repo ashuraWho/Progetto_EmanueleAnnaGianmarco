@@ -11,6 +11,7 @@ import pandas as pd
 from faseA_anna import load_dataset, cold_start, FEATURE_COLUMNS
 from fasiBC_emanuele import train_model, select_next_song, print_feature_importance
 from faseD_anna import interaction_step
+from graficoFinale_emanuele import plot_valence_energy_boundary
 
 
 def main():
@@ -33,9 +34,10 @@ def main():
         print("\n--- MENU ---")
         print("1. Avvia Cold Start")
         print("2. Continua con suggerimenti AI")
+        print("3. Mostra grafico finale (Valence vs Energy)")
         print("0. Esci")
 
-        choice = input("Scelta: ")
+        choice = input("Scelta (0-3): ")
 
         match choice:
             case "1":
@@ -44,8 +46,7 @@ def main():
                 # Inizializzo lo stato per le fasi B/C
                 state = {
                     "user_history": user_history,
-                    # Contatore di quante canzoni sono state votate (serve per stampare insight ogni N turni)
-                    "interaction_count": len(user_history),
+                    "interaction_count": len(user_history), # Contatore di quante canzoni sono state votate (serve per stampare insight ogni N turni)
                     "feature_cols": FEATURE_COLUMNS,
                     "meta_cols": ["track_id", "track_name", "artists"],
                     "model": None
@@ -122,6 +123,14 @@ def main():
                     print(f"Canzoni sentite totali: {len(seen_tracks)}")
 
 
+            case "3":
+                if state is None or state.get("model") is None or state["user_history"].empty:
+                    print("\n[Grafico] Devi prima fare il Cold Start e almeno un ciclo di suggerimenti per addestrare il modello.")
+                else:
+                    print("\n[Grafico Finale] Mostro il rapporto tra Valence, Energy e decisione del modello...")
+                    plot_valence_energy_boundary(state)
+                    
+                    
             case "0":
                 print("\nUscita dal programma. A presto!")
                 break

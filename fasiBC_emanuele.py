@@ -70,7 +70,7 @@ def build_model(model_type: str, n_samples: int):
             n_estimators = 200, # numero di alberi
             max_depth = max(3, min(8, n_samples // 2)), # profondità adattiva in base ai campioni disponibili (min 3, max 8)
             min_samples_leaf = 2, # vado a ridurre l'overfitting impedendo foglie con un solo campione
-            class_weight = "balanced",
+            class_weight = "balanced", # riduco overfitting se ho pochi voti
             random_state = 42
         )
         
