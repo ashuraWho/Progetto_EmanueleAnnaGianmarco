@@ -20,7 +20,7 @@ Il sistema è progettato per apprendere in tempo reale, aggiornando il modello d
 2. Condizione pre-addestramento: il modello viene costruito solo se ci sono almeno due classi presenti (almeno un like e un dislike).
 3. Scelta del modello:
     - Random Forest (RF) -> ideale per dataset piccoli, infatti messo di default.
-    - MLP (Multi-Layer Perceptron) -> abilitato dopo 20 voti.
+    - MLP (Multi-Layer Perceptron) -> abilitato dopo 30 voti.
 4. Pipeline: tutte le feature vengono scalate con MinMaxScaler per uniformità tra RF e MLP.
 5. Training: ogni volta che arriva un nuovo feedback, il modello viene riaddestrato per incorporare la nuova informazione.
 6. Output: pipeline addestrata salvata nello state["model"].

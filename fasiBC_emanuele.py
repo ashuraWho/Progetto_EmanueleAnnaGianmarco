@@ -93,17 +93,50 @@ def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionari
     if state["user_history"]["vote"].nunique() < 2: # senza due classi diverse non vado ad addestrare nulla
         state["model"] = None
         return None
+
+    # Salvo (se esiste) l'ultima loss dell'MLP per confrontarla dopo il nuovo training
+    previous_loss = state.get("last_loss")
     
     # X = feature numeriche dei brani votati | y = (0/1)
     X = state["user_history"][state["feature_cols"]]
     y = state["user_history"]["vote"].astype(int)
     
     # Switch automatico del modello
-    model_type = "rf" if len(state["user_history"]) < 20 else "mlp" # uso RF di default e abilito MLP solo dopo 20 voti
+    model_type = "rf" if len(state["user_history"]) < 30 else "mlp" # uso RF di default e abilito MLP solo dopo 30 voti
     state["model_type"] = model_type
     
     pipeline = build_model(state["model_type"], len(state["user_history"])) # vado a costruire il modello richiesto (RF o MLP) con scaler
     pipeline.fit(X, y) # addestramento supervisionato sui feedback raccolti
+    
+    
+    # Analisi della Loss (solo per MLP)
+    """
+        La loss rappresenta quanto il modello sta sbagliando durante l'addestramento.
+        Una loss in diminuzione indica che il modello sta imparando a fare previsioni migliori.
+        Qui salvo la loss attuale per confrontarla con quella precedente e vedere se sta migliorando.
+    """
+    
+    if model_type == "mlp":
+        clf = pipeline.named_steps.get("clf")
+
+        # Ogni volta che ri-addestro l’MLP con i tuoi nuovi voti, scorro più epoche interne
+        #   -> per ogni epoca memorizzo la loss in loss_curve_
+        if hasattr(clf, "loss_curve_") and len(clf.loss_curve_) > 0:
+            current_loss = float(clf.loss_curve_[-1])
+
+            # Storico delle loss ad ogni ri-addestramento
+            loss_history = state.get("loss_history", [])
+            loss_history.append(current_loss)
+            state["loss_history"] = loss_history
+
+            # Salvo anche l'ultima loss per confronto nel main
+            state["last_loss"] = current_loss
+        else:
+            # Ho visto che in casi rari loss_curve_ potrebbe non essere popolata
+            state["last_loss"] = None
+    else:
+        # Se sto usando RF azzero eventuali info sulla loss del MLP
+        state["last_loss"] = None
     
     state["model"] = pipeline # salvo il modello addestrato
     

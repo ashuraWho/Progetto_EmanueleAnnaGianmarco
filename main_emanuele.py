@@ -44,6 +44,8 @@ def main():
                 # Inizializzo lo stato per le fasi B/C
                 state = {
                     "user_history": user_history,
+                    # Contatore di quante canzoni sono state votate (serve per stampare insight ogni N turni)
+                    "interaction_count": len(user_history),
                     "feature_cols": FEATURE_COLUMNS,
                     "meta_cols": ["track_id", "track_name", "artists"],
                     "model": None
@@ -71,10 +73,25 @@ def main():
 
                     if state["model_type"] == "rf":
                         print("[INFO] Modello ML (Random Forest) addestrato.")
-                        print_feature_importance(state, top_k=5)
+                        # Ogni 10 canzoni votate stampo le feature più importanti
+                        total_interactions = len(state["user_history"])
+                        if total_interactions % 10 == 0:
+                            print("\n[Interpretabilità] Ho abbastanza dati per dirti cosa sto guardando di più:")
+                            print_feature_importance(state, top_k=5)
                     else:
                         print("[INFO] Modello DL (MLP) addestrato.")
-                        print("[INFO] DL non ha feature_importance disponibile.")
+                        # Analisi qualitativa della loss durante i vari ri-addestramenti
+                        loss_history = state.get("loss_history", [])
+                        if len(loss_history) >= 2:
+                            prev_loss = loss_history[-2]
+                            curr_loss = loss_history[-1]
+                            trend = "diminuita" if curr_loss < prev_loss else "aumentata"
+                            print(
+                                f"[Interpretabilità] Loss dell'ultimo training: {curr_loss:.4f} "
+                                f"(prima era {prev_loss:.4f}, quindi è {trend})."
+                            )
+                        elif len(loss_history) == 1:
+                            print(f"[Interpretabilità] Prima loss osservata del modello MLP: {loss_history[-1]:.4f}.")
 
                     # Pool di candidate -> esclude già viste
                     candidate_df = df[~df["track_id"].isin(seen_tracks)]
@@ -92,6 +109,10 @@ def main():
                     state["user_history"], seen_tracks, vote = interaction_step(
                         song_row, confidence, state["user_history"], seen_tracks
                     )
+
+                    # Aggiorno il contatore di interazioni solo se l'utente ha effettivamente dato un voto
+                    if vote is not None:
+                        state["interaction_count"] = state.get("interaction_count", 0) + 1
 
                     # Se l'utente preme Invio, esco dal loop
                     if vote is None:
