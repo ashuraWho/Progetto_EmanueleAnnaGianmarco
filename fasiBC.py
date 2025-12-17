@@ -163,7 +163,7 @@ def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionari
     
 def select_next_song(state: Dict, candidate_df: pd.DataFrame, exploration_rate=0.3):
     # state -> contiene il modello, le feature, storico dell'utente
-	# candidate_df -> canzoni non ancora ascoltate
+	# candidate_df -> canzoni non ancora votate
 	# exploration_rate = 0.3 -> 30% delle volte esploro, 70% sfrutto
  
     # Non ci sono più canzoni da proporre
