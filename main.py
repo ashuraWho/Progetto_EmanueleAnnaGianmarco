@@ -46,7 +46,7 @@ def main():
 
                 print("\nCold Start completato!")
                 print(user_history[["track_name", "artists", "vote"]])
-                print("\nNumero canzoni viste:", len(seen_tracks))
+                print("\nNumero canzoni votate:", len(seen_tracks))
 
 
             case "2":
@@ -112,7 +112,7 @@ def main():
                         break
 
                     # Log voto
-                    print(f"Canzoni sentite totali: {len(seen_tracks)}")
+                    print(f"Canzoni votate totali: {len(seen_tracks)}")
 
 
             case "3":
