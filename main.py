@@ -4,6 +4,7 @@ from faseA import load_dataset, cold_start, FEATURE_COLUMNS
 from fasiBC import train_model, select_next_song, print_feature_importance
 from faseD import interaction_step
 from graficoFinale import plot_valence_energy_boundary
+from wrapped import wrapped_utente, top_artists, top_generi
 
 
 def main():
@@ -27,9 +28,10 @@ def main():
         print("1. Avvia Cold Start")
         print("2. Continua con suggerimenti AI")
         print("3. Mostra grafico finale (Valence vs Energy)")
+        print("4. Mostra Wrapped Utente")
         print("0. Esci")
 
-        choice = input("Scelta (0-3): ")
+        choice = input("Scelta (0-4): ")
 
         match choice:
             case "1":
@@ -122,7 +124,14 @@ def main():
                     print("\n[Grafico Finale] Mostro il rapporto tra Valence, Energy e decisione del modello...")
                     plot_valence_energy_boundary(state)
                     
-                    
+            case "4":
+                if state is None or state["user_history"] is None or state["user_history"].empty:
+                    print("Devi prima fare il Cold Start!")
+                    continue
+                wrapped_utente(state)
+                top_artists(state)
+                top_generi(state)
+                
             case "0":
                 print("\nUscita dal programma. A presto!")
                 break

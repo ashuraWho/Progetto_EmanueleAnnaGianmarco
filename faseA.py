@@ -143,7 +143,7 @@ def ask_favorite_artist(df: pd.DataFrame) -> str | None:
 #Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
 #(df-> dataset completo, n_songs-> numero di canzoni iniziali da votare)
 
-def cold_start(df: pd.DataFrame, n_songs: int = 10):
+def cold_start(df: pd.DataFrame, n_songs: int):
 
     print("\n--- BENVENUTO NEL TUO AI DJ ---")
     print(f"Vota {n_songs} canzoni casuali o inserisci il tuo artista preferito!!\n")
@@ -177,6 +177,7 @@ def cold_start(df: pd.DataFrame, n_songs: int = 10):
                     "track_id": song["track_id"],
                     "track_name": song["track_name"],
                     "artists": song["artists"],
+                    "track_genre": song["track_genre"],
                     "vote": 1
                 }
 
@@ -216,6 +217,7 @@ def cold_start(df: pd.DataFrame, n_songs: int = 10):
             "track_id": song["track_id"],
             "track_name": song["track_name"],
             "artists": song["artists"],
+            "track_genre": song["track_genre"],
             "vote": vote
         }
 
