@@ -63,7 +63,7 @@ def main():
                     if model is None:
                         print("[WARNING] Non ci sono abbastanza dati (almeno un like e un dislike) per addestrare il modello.")
                         break
-
+                    
                     if state["model_type"] == "rf":
                         print("[INFO] Modello ML (Random Forest) addestrato.")
                         # Ogni 10 canzoni votate stampo le feature più importanti
