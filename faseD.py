@@ -32,7 +32,7 @@ def interaction_step(
     
     # Uso sia il genere principale (macro-classe) sia il sottogenere
     main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
-    sub_genre = song.get("track_genre")
+    sub_genre = song.get("track_genre", "N/A")
     print(f"Genere : {main_genre} ({sub_genre})")
 
     # Risposta dell'utente su quanto la canzone sia effettivamente azzeccata
@@ -47,11 +47,14 @@ def interaction_step(
         print("Inserisci solo 0, 1, 2, 3, 4 oppure premi Invio per uscire.")
 
     # Creo una nuova riga da aggiungere a user_history
+    main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
+    sub_genre = song.get("track_genre", "N/A")
     new_entry = {
         "track_id": song["track_id"],
         "track_name": song["track_name"],
         "artists": song["artists"],
-        "track_genre": song["track_genre"],
+        "main_genre": main_genre,
+        "sub_genre": sub_genre,
         "vote": vote
     }
 

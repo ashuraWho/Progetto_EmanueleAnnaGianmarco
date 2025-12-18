@@ -49,7 +49,7 @@ def ask_user_vote(song: pd.Series) -> int:
     
     # Uso sia il genere principale (macro-classe) sia il sottogenere
     main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
-    sub_genre = song.get("track_genre")
+    sub_genre = song.get("track_genre", "N/A")
     print(f"Genere : {main_genre} ({sub_genre})")
     
     # Continuo a chiedere finché l'input non è valido
@@ -109,9 +109,7 @@ def ask_favorite_artist(df: pd.DataFrame) -> str | None:
         print(f"{idx}. {name}")
 
     while True:
-        choice = input(
-            "Quale intendevi? (inserisci il numero corrispondente, 'tutti' per selezionarli tutti, oppure premi Invio per annullare): "
-        )
+        choice = input("Quale intendevi? (numeri separati da virgola, 'tutti', oppure premi Invio per annullare): ")
         
         choice_clean = choice.strip().lower()
 
@@ -124,17 +122,23 @@ def ask_favorite_artist(df: pd.DataFrame) -> str | None:
             all_selected = [str(name).lower() for name in matched_artists]
             return all_selected
 
-        if not choice_clean.isdigit():
-            print("Per favore inserisci solo un numero valido oppure 'tutti'.")
+        parts = [p.strip() for p in choice_clean.split(",")] # gestione di input multipli
+        
+        if not all(p.isdigit() for p in parts):
+            print("Inserisci solo numeri separati da virgola (es: 1,3,4).")
             continue
 
-        idx = int(choice_clean)
-        if 1 <= idx <= len(matched_artists):
-            selected = matched_artists[idx - 1]
-            print(f"Hai selezionato: {selected}")
-            return str(selected).lower()
+        indices = [int(p) for p in parts]
+        
+        if not all(1 <= idx <= len(matched_artists) for idx in indices):
+            print("Uno o più numeri non sono validi.")
+            continue
 
-        print("Numero non valido. Riprova.")
+        selected = [matched_artists[idx - 1] for idx in indices]
+        pretty = ", ".join(selected)
+        print(f"Hai selezionato: {pretty}")
+
+        return [str(name).lower() for name in selected]
 
 
 #Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
@@ -173,11 +177,14 @@ def cold_start(df: pd.DataFrame, n_songs: int):
             print(f"\nHo trovato canzoni di {pretty_names}! Le considero come 'Mi piace'.")
 
             for _, song in artist_songs.iterrows():
+                main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
+                sub_genre = song.get("track_genre", "N/A")
                 entry = {
                     "track_id": song["track_id"],
                     "track_name": song["track_name"],
                     "artists": song["artists"],
-                    "track_genre": song["track_genre"],
+                    "main_genre": main_genre,
+                    "sub_genre": sub_genre,
                     "vote": 1
                 }
 
@@ -213,11 +220,14 @@ def cold_start(df: pd.DataFrame, n_songs: int):
         seen_tracks.add(song["track_id"])
 
         # Creo i dati da salvare
+        main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
+        sub_genre = song.get("track_genre", "N/A")
         entry = {
             "track_id": song["track_id"],
             "track_name": song["track_name"],
             "artists": song["artists"],
-            "track_genre": song["track_genre"],
+            "main_genre": main_genre,
+            "sub_genre": sub_genre,
             "vote": vote
         }
 

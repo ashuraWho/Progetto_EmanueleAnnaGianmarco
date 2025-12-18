@@ -47,10 +47,10 @@ def top_generi(state):
     
     liked = state["user_history"][state["user_history"]["vote"] == 1]
 
-    if "track_genre" in liked.columns and not liked.empty:
-        top3 = liked["track_genre"].value_counts().head(3)
-        print("\nTop 3 Generi preferiti (track_genre):")
+    if "sub_genre" in liked.columns and not liked.empty:
+        top3 = liked["sub_genre"].value_counts().head(3)
+        print("\nTop 3 Generi preferiti:")
         for i, (genere, count) in enumerate(top3.items(), start=1):
             print(f"({i}) {genere} ({count} canzoni)")
     else:
-        print("\n[Wrapped] Colonna 'track_genre' assente/nessun dato.")
+        print("\n[Wrapped] Colonna 'sub_genre' assente/nessun dato.")
