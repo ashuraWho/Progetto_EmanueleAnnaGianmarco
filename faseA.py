@@ -50,27 +50,77 @@ def ask_user_vote(song: pd.Series) -> int:
     
     # Continuo a chiedere finché l'input non è valido
     while True:
-        vote = input("Ti piace? (1 = Sì, 0 = No): ")
+        vote = input("Ti piace? (1 = Sì, 0 = No, 2 = Indifferente): ")
 
-        if vote in ["0", "1"]:
+        if vote in ["0", "1", "2"]:
             return int(vote)
 
         print("Input non valido. Inserisci solo 0 o 1")
+        
+#Creo una nuova funzione che chiede all'utente il suo artista preferito in modo tale da avere già una lista di canzoni se questo è presente nel dataset
+def ask_favorite_artist() -> str | None:
+    artist = input(
+        "\nHai un artista preferito? (Scrivi il suo nome o premi Invio): "
+    )
+
+    # Rimuovo spazi iniziali/finali e normalizzo gli spazi interni
+    artist = " ".join(artist.strip().split())
+
+    # Converto tutto in lowercase per confronti case-insensitive
+    artist = artist.lower()
+
+    return artist if artist != "" else None
+
 
 
 #Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
 #(df-> dataset completo, n_songs-> numero di canzoni iniziali da votare)
 
-def cold_start(df: pd.DataFrame, n_songs: int = 5):
+def cold_start(df: pd.DataFrame, n_songs: int = 10):
 
     print("\n--- BENVENUTO NEL TUO AI DJ ---")
-    print(f"Vota {n_songs} canzoni casuali\n")
+    print(f"Vota {n_songs} canzoni casuali o inserisci il tuo artista preferito!!\n")
+    
+    favorite_artist = ask_favorite_artist()
 
     # Lista temporanea dove verranno salvate tutte le interazioni con l'utente
     user_history = []
 
     # Set per tenere traccia delle canzoni già viste
     seen_tracks = set()
+    
+    if favorite_artist is not None:
+    
+        artist_songs = df[
+            df["artists"].str.lower().str.contains(favorite_artist, na=False)
+        ]
+
+        if not artist_songs.empty:
+            print(f"\nHo trovato canzoni di {favorite_artist.title()}! Le considero come 'Mi piace'.")
+
+            for _, song in artist_songs.iterrows():
+                entry = {
+                    "track_id": song["track_id"],
+                    "track_name": song["track_name"],
+                    "artists": song["artists"],
+                    "vote": 1
+                }
+
+                for feature in FEATURE_COLUMNS:
+                    entry[feature] = song[feature]
+
+                user_history.append(entry)
+                seen_tracks.add(song["track_id"])
+
+            #user_history = pd.DataFrame(user_history)
+
+            print("\nHo aggiunto alcune canzoni del tuo artista preferito!")
+            print("Ora ti chiederò comunque di votare altre canzoni.\n")
+
+        else:
+            print(f"\nNon ho trovato canzoni di {favorite_artist.title()}.")
+            print("Ti chiederò più voti iniziali.")
+            n_songs = 10
 
     # Estraggo le canzoni iniziali
     sampled_songs = sample_songs(df, seen_tracks, n_songs)

@@ -33,7 +33,7 @@ def main():
 
         match choice:
             case "1":
-                user_history, seen_tracks = cold_start(df, n_songs=5)
+                user_history, seen_tracks = cold_start(df, n_songs=10)
 
                 # Inizializzo lo stato per le fasi B/C
                 state = {
