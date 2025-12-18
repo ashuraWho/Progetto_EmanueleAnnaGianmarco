@@ -241,9 +241,9 @@ La funzione `ask_favorite_artist`:
 - normalizza l’input dell’utente (case-insensitive, gestione degli spazi);
 - cerca nel dataset tutti gli artisti che contengono il pattern inserito;
 - gestisce tre casi:
-  - **nessuna corrispondenza** → il Cold Start prosegue in modalità standard;
-  - **una sola corrispondenza** → l’artista viene selezionato automaticamente;
-  - **più corrispondenze** → l’utente può scegliere uno o più artisti, oppure selezionarli tutti.
+  - **nessuna corrispondenza** -> il Cold Start prosegue in modalità standard;
+  - **una sola corrispondenza** -> l’artista viene selezionato automaticamente;
+  - **più corrispondenze** -> l’utente può scegliere uno o più artisti, oppure selezionarli tutti.
 
 Se vengono trovate canzoni dell’artista (o degli artisti) selezionato/i:
 
@@ -266,11 +266,11 @@ Per ogni canzone vengono mostrate:
 
 L’utente può esprimere un voto su una scala discreta:
 
-- `0` → Non mi piace (dislike forte)
-- `1` → Mi piace (like forte)
-- `2` → Indifferente
-- `3` → Forse sì (like debole)
-- `4` → Forse no (dislike debole)
+- `0` -> Non mi piace (dislike forte)
+- `1` -> Mi piace (like forte)
+- `2` -> Indifferente
+- `3` -> Forse sì (like debole)
+- `4` -> Forse no (dislike debole)
 
 Tutti i voti vengono salvati nello `user_history` insieme alle feature numeriche del brano.
 
@@ -305,7 +305,7 @@ Queste strutture costituiscono l’input delle **Fasi B, C e D**, dove il modell
 
 #### Obiettivo
 
-Le fasi B e C del progetto hanno l’obiettivo di creare un modello di classificazione binaria che impari dai feedback dell’utente e predica la probabilità che un brano venga apprezzato:
+Le fasi B e C del progetto hanno l’obiettivo di creare un modello che impari dai feedback dell’utente e predica la probabilità che un brano venga apprezzato:
 
 $$P(\text{“mi piace”}=1 \mid \text{feature audio})$$
 
@@ -313,7 +313,14 @@ Il sistema è progettato per apprendere in tempo reale, aggiornando il modello d
 
 #### Fase B – Training del Modello
 
-1. **Input**: feedback dell'utente (`user_history`) con feature audio numeriche e label 0/1
+Considero per l'addestramento solo i voti informativi:
+- 0 = dislike forte -> peso 1
+- 1 = like forte -> peso 1
+- 3 = forse sì  (like debole) -> peso 0.5
+- 4 = forse no  (dislike debole) -> peso 0.5
+- I voti 2 = indifferente vengono ignorati (nessun effetto sul modello).
+
+1. **Input**: feedback dell'utente (`user_history`) con feature audio numeriche e label
 2. **Condizione pre-addestramento**: il modello viene costruito solo se ci sono almeno due classi presenti (almeno un like e un dislike)
 3. **Scelta automatica del modello**:
    - **Random Forest (RF)**: usato di default per dataset piccoli (< 80 voti o sbilanciamento)
@@ -384,7 +391,7 @@ Il sistema include una funzionalità di visualizzazione avanzata (`graficoFinale
   - Linea nera: soglia di decisione (p = 0.5)
   - Linee grigie: soglie intermedie (p = 0.3 e p = 0.7)
 - **Mappa di probabilità**: sfondo colorato (gradiente rosso -> giallo -> verde) che indica la probabilità di like
-- **Feedback utente**: punti verdi (like) e rossi (dislike)
+- **Feedback utente**: punti verdi (like), rossi (dislike), verde chiaro (forse sì), rosso/arancione (forse no), grigi (indifferente)
 
 **Utilizzo**: Completa il Cold Start e almeno un ciclo di suggerimenti, poi seleziona l'opzione `3` dal menu principale.
 
@@ -398,6 +405,16 @@ Dopo aver votato l'utente può visualizzare
 - **🎼 Top 3 generi preferiti**: calcolati in base ai brani votati positivamente.
 - **🎤 Top 3 artisti preferiti**: gli artisti più ricorrenti tra i brani apprezzati.
 - **💿 Statistiche audio**: medie di alcune feature musicali come valence, energy e mood_score, che aiutano a capire il tipo di atmosfera musicale preferita.
+
+## Consigli Personalizzati AI
+
+**Autore**: Emanuele Anzellotti
+
+Questo modulo implementa il sistema di raccomandazione personalizzata dell’applicazione.
+L’obiettivo è fornire suggerimenti mirati all’utente sulla base delle canzoni valutate positivamente durante l’interazione.
+
+- **Obiettivo**: Stimare la probabilità che un utente apprezzi nuovi contenuti musicali e suggerire: artisti non ancora ascoltati, generi principali e sottogeneri; il tutto basandosi su un modello di Machine Learning/Deep Learning addestrato sui feedback dell’utente.
+- **Stampa**: Il modulo stampa a schermo: fino a 5 artisti consigliati, fino a 5 generi principali, fino a 5 sottogeneri; ogni suggerimento è accompagnato da una stima della probabilità di apprezzamento, rendendo il consiglio interpretabile e trasparente.
 
 ---
 
