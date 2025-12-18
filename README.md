@@ -19,9 +19,14 @@ Questo progetto simula il funzionamento di un sistema di raccomandazione musical
 - [Tecnologie Utilizzate](#-tecnologie-utilizzate)
 - [Pulizia dei Dati e Analisi Esplorativa](#-pulizia-dei-dati-e-analisi-esplorativa)
 - [Architettura del Software](#-architettura-del-software)
+  - [Fase A – Cold Start (Avvio a Freddo)](#fase-a--cold-start-avvio-a-freddo)
+  - [Fasi B e C – Training e Active Learning](#fasi-b-e-c--training-e-active-learning)
+  - [Fase D – Interazione e Feedback Loop](#fase-d--interazione-e-feedback-loop)
 - [Visualizzazione Grafica](#-visualizzazione-grafica)
+- [Creazione funzione Wrapped](#-creazione-funzione-wrapped)
+- [Consigli Personalizzati AI](#-consigli-personalizzati-ai)
 - [Note Tecniche](#️-note-tecniche)
-- [Conclusione](#-conclusione-e-integrazione-del-sistema)
+- [Conclusione e Integrazione del Sistema](#-conclusione-e-integrazione-del-sistema)
 
 ---
 
@@ -410,8 +415,8 @@ Dopo aver votato l'utente può visualizzare
 
 **Autore**: Emanuele Anzellotti
 
-Questo modulo implementa il sistema di raccomandazione personalizzata dell’applicazione.
-L’obiettivo è fornire suggerimenti mirati all’utente sulla base delle canzoni valutate positivamente durante l’interazione.
+Questo modulo implementa il livello finale di raccomandazione personalizzata ad alto livello, sfruttando le probabilità di gradimento stimate dal modello ML/DL addestrato durante le Fasi B e C.
+A differenza della raccomandazione “brano singolo” utilizzata durante l’Active Learning, questo modulo fornisce una visione aggregata delle preferenze dell’utente, suggerendo nuovi artisti e generi potenzialmente affini ai suoi gusti.
 
 - **Obiettivo**: Stimare la probabilità che un utente apprezzi nuovi contenuti musicali e suggerire: artisti non ancora ascoltati, generi principali e sottogeneri; il tutto basandosi su un modello di Machine Learning/Deep Learning addestrato sui feedback dell’utente.
 - **Stampa**: Il modulo stampa a schermo: fino a 5 artisti consigliati, fino a 5 generi principali, fino a 5 sottogeneri; ogni suggerimento è accompagnato da una stima della probabilità di apprezzamento, rendendo il consiglio interpretabile e trasparente.
