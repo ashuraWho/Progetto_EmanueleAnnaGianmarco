@@ -67,18 +67,74 @@ def ask_user_vote(song: pd.Series) -> int:
         print("Input non valido. Inserisci solo 0, 1, 2, 3 o 4")
         
 #Creo una nuova funzione che chiede all'utente il suo artista preferito in modo tale da avere già una lista di canzoni se questo è presente nel dataset
-def ask_favorite_artist() -> str | None:
-    artist = input(
+def ask_favorite_artist(df: pd.DataFrame) -> str | None:
+    """
+    Chiede all'utente un artista preferito e gestisce i casi di ambiguità:
+    - se il pattern inserito non matcha nessun artista -> ritorna None
+    - se matcha un solo artista -> lo prende direttamente
+    - se matcha più artisti diversi -> fa scegliere all'utente quale intendeva
+    - se scrivi "tutti" -> seleziona tutti gli artisti trovati
+    """
+    artist_input = input(
         "\nHai un artista preferito? (Scrivi il suo nome o premi Invio): "
     )
 
     # Rimuovo spazi iniziali/finali e normalizzo gli spazi interni
-    artist = " ".join(artist.strip().split())
+    query = " ".join(artist_input.strip().split()).lower()
 
-    # Converto tutto in lowercase per confronti case-insensitive
-    artist = artist.lower()
+    if query == "":
+        return None
 
-    return artist if artist != "" else None
+    # Trovo gli artisti distinti che contengono il pattern inserito
+    mask = df["artists"].str.lower().str.contains(query, na=False)
+    matched_artists = (
+        df.loc[mask, "artists"]
+        .dropna()
+        .astype(str)
+        .unique()
+    )
+
+    if len(matched_artists) == 0:
+        print(f"\nNon ho trovato nessun artista che contenga '{query}'.")
+        return None
+
+    if len(matched_artists) == 1:
+        selected = matched_artists[0]
+        print(f"\nHo trovato l'artista: {selected}")
+        return selected.lower()
+
+    # Più artisti trovati: faccio scegliere all'utente
+    print("\nHo trovato più artisti che corrispondono alla tua ricerca:")
+    for idx, name in enumerate(matched_artists, start=1):
+        print(f"{idx}. {name}")
+
+    while True:
+        choice = input(
+            "Quale intendevi? (inserisci il numero corrispondente, 'tutti' per selezionarli tutti, oppure premi Invio per annullare): "
+        )
+        
+        choice_clean = choice.strip().lower()
+
+        if choice_clean == "":
+            print("Nessun artista selezionato, procederò senza artista preferito.")
+            return None
+
+        if choice_clean in ["tutti", "all"]:
+            print("Hai scelto tutti gli artisti trovati.")
+            all_selected = [str(name).lower() for name in matched_artists]
+            return all_selected
+
+        if not choice_clean.isdigit():
+            print("Per favore inserisci solo un numero valido oppure 'tutti'.")
+            continue
+
+        idx = int(choice_clean)
+        if 1 <= idx <= len(matched_artists):
+            selected = matched_artists[idx - 1]
+            print(f"Hai selezionato: {selected}")
+            return str(selected).lower()
+
+        print("Numero non valido. Riprova.")
 
 
 #Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
@@ -91,8 +147,8 @@ def cold_start(df: pd.DataFrame, n_songs: int = 10):
 
     print("\n--- BENVENUTO NEL TUO AI DJ ---")
     print(f"Vota {n_songs} canzoni casuali o inserisci il tuo artista preferito!!\n")
-    
-    favorite_artist = ask_favorite_artist()
+
+    favorite_artist = ask_favorite_artist(df)
 
     # Lista temporanea dove verranno salvate tutte le interazioni con l'utente
     user_history = []
@@ -101,13 +157,20 @@ def cold_start(df: pd.DataFrame, n_songs: int = 10):
     seen_tracks = set()
     
     if favorite_artist is not None:
-    
-        artist_songs = df[
-            df["artists"].str.lower().str.contains(favorite_artist, na=False)
-        ]
+
+        # Costruisco la maschera a seconda che l'utente abbia scelto uno o più artisti
+        if isinstance(favorite_artist, list):
+            artist_names = [name.lower() for name in favorite_artist]
+            artist_mask = df["artists"].str.lower().isin(artist_names)
+            pretty_names = ", ".join(sorted({name.title() for name in artist_names}))
+        else:
+            artist_mask = df["artists"].str.lower() == favorite_artist
+            pretty_names = favorite_artist.title()
+
+        artist_songs = df[artist_mask]
 
         if not artist_songs.empty:
-            print(f"\nHo trovato canzoni di {favorite_artist.title()}! Le considero come 'Mi piace'.")
+            print(f"\nHo trovato canzoni di {pretty_names}! Le considero come 'Mi piace'.")
 
             for _, song in artist_songs.iterrows():
                 entry = {
@@ -127,9 +190,10 @@ def cold_start(df: pd.DataFrame, n_songs: int = 10):
 
             print("\nHo aggiunto alcune canzoni del tuo artista preferito!")
             print("Ora ti chiederò comunque di votare altre canzoni.\n")
+            n_songs = 5
 
         else:
-            print(f"\nNon ho trovato canzoni di {favorite_artist.title()}.")
+            print(f"\nNon ho trovato canzoni di {pretty_names}.")
             print("Ti chiederò più voti iniziali.")
             n_songs = 10
 
