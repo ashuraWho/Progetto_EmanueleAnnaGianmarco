@@ -109,7 +109,7 @@ def ask_favorite_artist(df: pd.DataFrame) -> str | None:
         print(f"{idx}. {name}")
 
     while True:
-        choice = input("Quale intendevi? (numeri separati da virgola, 'tutti', oppure premi Invio per annullare): ")
+        choice = input("Quale intendevi? (numeri separati da virgola, 'tutti' o 'all', oppure premi Invio per annullare): ")
         
         choice_clean = choice.strip().lower()
 
@@ -240,8 +240,5 @@ def cold_start(df: pd.DataFrame, n_songs: int):
 
     # Converto la lista di dizionari in DataFrame
     user_history = pd.DataFrame(user_history)
-
-    print("\nCold Start completato!")
-    print(user_history[["track_name", "artists", "vote"]])
 
     return user_history, seen_tracks #Restituisce:user_history per il training del modello, seen_tracks per evitare ripetizioni
