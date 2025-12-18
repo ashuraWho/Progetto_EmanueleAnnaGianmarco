@@ -206,39 +206,92 @@ La fase di pulizia, analisi ed esplorazione ha prodotto un dataset pulito, coere
 
 ### Obiettivo
 
-Gestire l’avvio del sistema quando il modello non ha ancora informazioni sui gusti dell’utente, raccogliendo le prime etichette necessarie per il training iniziale.
+Raccogliere i primi feedback dell’utente in assenza di un modello addestrato, costruendo uno storico iniziale (`user_history`) che verrà utilizzato nelle successive fasi di training e raccomandazione.
+
+### Obiettivi principali
+
+- Avviare l’interazione con l’utente quando il sistema non possiede alcuna informazione sui suoi gusti.
+- Raccogliere voti espliciti su un insieme iniziale di canzoni.
+- Gestire un Cold Start “guidato” attraverso la richiesta opzionale di un artista preferito.
+- Salvare tutte le interazioni in una struttura dati coerente e riutilizzabile dal modello.
 
 ---
 
-### Funzionalità implementate
+### Caricamento e preprocessing del dataset
 
-- Caricamento del dataset musicale da file CSV
-- Pulizia **temporanea e minimale** dei dati (rimozione valori nulli nelle feature numeriche),  
-  effettuata **in attesa dell’integrazione del modulo dedicato al preprocessing dei dati**
-- Estrazione casuale di **N canzoni** dal dataset
-- Visualizzazione di:
-  - Titolo
-  - Artista
-  - Genere
-- Raccolta del voto dell’utente:
-  - `1` -> Mi piace
-  - `0` -> Non mi piace
-- Creazione dello storico utente (`user_history`)
-- Tracciamento delle canzoni già ascoltate (`seen_tracks`) per evitare ripetizioni
+Il dataset musicale viene caricato da file CSV e sottoposto alla **stessa pipeline di preprocessing e feature engineering** definita nel notebook di analisi preliminare (`pulizia.ipynb`), incapsulata nella funzione `preprocess_dataset`.
+
+Questa pipeline include:
+
+- rimozione dei valori mancanti;
+- deduplicazione semantica per `(track_name, artists)`;
+- mappatura dei generi musicali in macro-classi;
+- creazione di feature derivate (es. `mood_score`, `dance_mood`, `electronic_index`, `is_instrumental`).
+
+Il risultato è un DataFrame pronto per essere utilizzato in tutte le fasi successive del progetto.
+
+---
+
+### Raccolta dell’artista preferito (opzionale)
+
+Prima di proporre canzoni casuali, il sistema chiede all’utente se ha un **artista preferito**.
+
+La funzione `ask_favorite_artist`:
+
+- normalizza l’input dell’utente (case-insensitive, gestione degli spazi);
+- cerca nel dataset tutti gli artisti che contengono il pattern inserito;
+- gestisce tre casi:
+  - **nessuna corrispondenza** → il Cold Start prosegue in modalità standard;
+  - **una sola corrispondenza** → l’artista viene selezionato automaticamente;
+  - **più corrispondenze** → l’utente può scegliere uno o più artisti, oppure selezionarli tutti.
+
+Se vengono trovate canzoni dell’artista (o degli artisti) selezionato/i:
+
+- tutte le relative canzoni vengono aggiunte allo `user_history` con voto positivo (`vote = 1`);
+- le canzoni vengono segnate come già viste per evitare duplicazioni successive.
+
+In ogni caso, **anche se viene inserito un artista preferito**, il sistema continua comunque a chiedere all’utente di votare un numero fisso di canzoni casuali, così da ottenere feedback espliciti e non solo impliciti.
+
+---
+
+### Votazione delle canzoni
+
+Durante il Cold Start, all’utente vengono proposte canzoni casuali non ancora viste.
+
+Per ogni canzone vengono mostrate:
+
+- titolo;
+- artista;
+- genere musicale (macro-genere e sottogenere).
+
+L’utente può esprimere un voto su una scala discreta:
+
+- `0` → Non mi piace (dislike forte)
+- `1` → Mi piace (like forte)
+- `2` → Indifferente
+- `3` → Forse sì (like debole)
+- `4` → Forse no (dislike debole)
+
+Tutti i voti vengono salvati nello `user_history` insieme alle feature numeriche del brano.
 
 ---
 
 ### Output della Fase A
 
-- `user_history` -> DataFrame contenente:
-  - Feature audio numeriche
-  - Voto dell’utente
-  - Metadati (titolo, artista)
-- `seen_tracks` -> insieme di `track_id` già valutati
+Al termine del Cold Start, la funzione restituisce:
 
-Questi output costituiscono il **dataset di training iniziale** per le fasi successive del progetto.
+- `user_history`: DataFrame contenente lo storico delle interazioni utente (brano, voto, feature audio);
+- `seen_tracks`: insieme (`set`) degli identificativi dei brani già mostrati all’utente.
+
+Queste strutture costituiscono l’input delle **Fasi B, C e D**, dove il modello viene addestrato, utilizzato per la raccomandazione e aggiornato in un ciclo di Active Learning.
 
 ---
+
+### Considerazioni progettuali
+
+- La Fase A non utilizza alcun modello di Machine Learning.
+- Tutte le decisioni prese in questa fase hanno lo scopo di migliorare la qualità e la velocità di apprendimento del sistema nelle fasi successive.
+- La gestione dell’artista preferito è progettata per essere robusta rispetto ad ambiguità e input parziali dell’utente.
 
 ### File coinvolti
 
