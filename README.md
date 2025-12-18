@@ -32,12 +32,14 @@ Questo progetto simula il funzionamento di un sistema di raccomandazione musical
 
 ## Quick Start
 
-1. **Avvia il Cold Start** (opzione `1`): vota almeno 5 canzoni iniziali per permettere al sistema di apprendere i tuoi gusti
+1. **Avvia il Cold Start** (opzione `1`): vota almeno 10 canzoni iniziali (o 5 se scrivi il tuo artista preferito) per permettere al sistema di apprendere i tuoi gusti
 2. **Ricevi suggerimenti AI** (opzione `2`): il modello propone canzoni basate sui tuoi voti precedenti
-   - Premi `1` se ti piace, `0` se non ti piace
+   - Premi `1` se ti piace, `0` se non ti piace, `2` se è indifferente, `2` se forse ti piace, `3` se forse non ti piace
    - Premi `Invio` per tornare al menu principale
 3. **Visualizza il grafico** (opzione `3`): mostra la decision boundary del modello nello spazio Valence-Energy
-4. **Esci** (opzione `0`): termina il programma
+4. **Mostra Wrapped Utente** (opzione `4`): visualizza un riepilogo delle preferenze musicali basato esclusivamente sui brani votati dall’utente
+5. **Consigli personalizzati AI** (opzione `5`): suggerisce nuovi artisti, generi principali, sottogeneri. I consigli sono basati sulle probabilità di like stimate dal modello e ogni suggerimento è accompagnato da una stima di gradimento
+6. **Esci** (opzione `0`): termina il programma
 
 ---
 
