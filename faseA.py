@@ -91,6 +91,7 @@ def cold_start(df: pd.DataFrame, n_songs: int = 5):
             "track_id": song["track_id"],
             "track_name": song["track_name"],
             "artists": song["artists"],
+            "track_genre": song["track_genre"],
             "vote": vote
         }
 

@@ -44,6 +44,7 @@ def interaction_step(
         "track_id": song["track_id"],
         "track_name": song["track_name"],
         "artists": song["artists"],
+        "track_genre": song["track_genre"],
         "vote": vote
     }
 
