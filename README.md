@@ -221,8 +221,8 @@ Gestire l’avvio del sistema quando il modello non ha ancora informazioni sui g
   - Artista
   - Genere
 - Raccolta del voto dell’utente:
-  - `1`  ->  Mi piace
-  - `0`  ->  Non mi piace
+  - `1` -> Mi piace
+  - `0` -> Non mi piace
 - Creazione dello storico utente (`user_history`)
 - Tracciamento delle canzoni già ascoltate (`seen_tracks`) per evitare ripetizioni
 
@@ -230,11 +230,11 @@ Gestire l’avvio del sistema quando il modello non ha ancora informazioni sui g
 
 ### Output della Fase A
 
-- `user_history`  ->  DataFrame contenente:
+- `user_history` -> DataFrame contenente:
   - Feature audio numeriche
   - Voto dell’utente
   - Metadati (titolo, artista)
-- `seen_tracks`  ->  insieme di `track_id` già valutati
+- `seen_tracks` -> insieme di `track_id` già valutati
 
 Questi output costituiscono il **dataset di training iniziale** per le fasi successive del progetto.
 
@@ -288,6 +288,7 @@ Il sistema è progettato per apprendere in tempo reale, aggiornando il modello d
 
 ### Obiettivo
 
+visua
 Gestire l’interazione tra utente e sistema dopo che il modello è stato addestrato, chiudendo il ciclo di Active Learning.
 
 ---
@@ -326,13 +327,24 @@ Questo meccanismo realizza un ciclo di **Apprendimento Attivo (Active Learning)*
 Il sistema include una funzionalità di visualizzazione avanzata (`graficoFinale.py`) che mostra:
 
 - **Spazio Valence-Energy**: rappresentazione bidimensionale dei brani
-- **Decision Boundary**: 
+- **Decision Boundary**:
   - Linea nera: soglia di decisione (p = 0.5)
   - Linee grigie: soglie intermedie (p = 0.3 e p = 0.7)
 - **Mappa di probabilità**: sfondo colorato (gradiente rosso -> giallo -> verde) che indica la probabilità di like
 - **Feedback utente**: punti verdi (like) e rossi (dislike)
 
 **Utilizzo**: Completa il Cold Start e almeno un ciclo di suggerimenti, poi seleziona l'opzione `3` dal menu principale.
+
+## Creazione funzione Wrapped
+
+**Autore**: Gianmarco Sorrentino
+
+Il sistema include una funzione "Wrapped" che offre all'utente la possibilità di visualizzare un riepilogo delle proprie preferenze musicali.
+Dopo aver votato l'utente può visualizzare
+
+- **🎼 Top 3 generi preferiti**: calcolati in base ai brani votati positivamente.
+- **🎤 Top 3 artisti preferiti**: gli artisti più ricorrenti tra i brani apprezzati.
+- **💿 Statistiche audio**: medie di alcune feature musicali come valence, energy e mood_score, che aiutano a capire il tipo di atmosfera musicale preferita.
 
 ---
 
@@ -351,6 +363,7 @@ Il sistema include una funzionalità di visualizzazione avanzata (`graficoFinale
 ### Feature Utilizzate
 
 Il sistema utilizza **13 feature** totali:
+
 - **9 feature base**: `danceability`, `energy`, `speechiness`, `acousticness`, `instrumentalness`, `liveness`, `valence`, `tempo`, `loudness`
 - **4 feature derivate**: `mood_score`, `electronic_index`, `is_instrumental`, `dance_mood`
 
