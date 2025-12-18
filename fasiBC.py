@@ -96,27 +96,57 @@ def build_model(model_type: str, n_samples: int):
     
 def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionario quando vado a salvare i feedback
     
-    if state["user_history"]["vote"].nunique() < 2: # senza due classi diverse non vado ad addestrare nulla
+    # Considero per l'addestramento solo i voti informativi:
+    #   0 = dislike forte
+    #   1 = like forte
+    #   3 = forse sì  (like debole)
+    #   4 = forse no  (dislike debole)
+    # I voti 2 = indifferente vengono ignorati (nessun effetto sul modello).
+    history_train = state["user_history"][state["user_history"]["vote"].isin([0, 1, 3, 4])].copy() # filtro solo i voti utili
+    
+    if history_train.empty:
+        state["model"] = None # non ho dati utili per addestrare
+        return None
+
+    # Target binario: 1 per like/forse sì, 0 per dislike/forse no
+    history_train["target"] = history_train["vote"].isin([1, 3]).astype(int) # converto in 0/1
+
+    # Senza almeno una canzone "piace" e una "non piace", non addestro nulla
+    if history_train["target"].nunique() < 2:
         state["model"] = None
         return None
 
     # Salvo (se esiste) l'ultima loss dell'MLP per confrontarla dopo il nuovo training
     previous_loss = state.get("last_loss")
     
-    # X = feature numeriche dei brani votati | y = (0/1)
-    X = state["user_history"][state["feature_cols"]]
-    y = state["user_history"]["vote"].astype(int)
+    # X = feature numeriche dei brani votati | y = (0/1) (dopo la mappatura sopra)
+    X = history_train[state["feature_cols"]]
+    y = history_train["target"].astype(int)
+
+    # Pesi dei campioni:
+    #   - like/dislike forti -> peso 1.0
+    #   - forse sì/forse no -> peso 0.5
+    sample_weight = history_train["vote"].map(
+        {
+            1: 1.0,  # like forte
+            0: 1.0,  # dislike forte
+            3: 0.5,  # forse sì
+            4: 0.5,  # forse no
+        }
+    ).astype(float)
     
-    # Switch automatico del modello
-    n_like = (state["user_history"]["vote"] == 1).sum()
-    n_dislike = (state["user_history"]["vote"] == 0).sum()
+    # Switch automatico del modello (uso il target binario dopo la mappatura)
+    n_like = int(y.sum()) # numero di like (1)
+    n_dislike = int(len(y) - n_like) # numero di dislike (0)
+    n_samples = len(history_train) # numero totale di campioni
 
     model_type = "rf" if len(state["user_history"]) < 80 or n_like < 15 or n_dislike < 15 else "mlp" # uso RF di default e abilito MLP solo se ho abbastanza dati
     state["model_type"] = model_type
     
     pipeline = build_model(state["model_type"], len(state["user_history"])) # vado a costruire il modello richiesto (RF o MLP) con scaler
-    pipeline.fit(X, y) # addestramento supervisionato sui feedback raccolti
+    pipeline.fit(X, y, clf__sample_weight=sample_weight.values) # addestramento supervisionato sui feedback raccolti, con pesi diversi per voti forti/deboli
     
+    # ---------
     
     # Analisi della Loss (solo per MLP)
     """

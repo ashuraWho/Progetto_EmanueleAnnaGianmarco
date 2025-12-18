@@ -9,6 +9,9 @@ from typing import Dict
     Mostra il grafico di dispersione Valence vs Energy e traccia la decision boundary del modello:
         - punti verdi: brani con voto 1 (Like)
         - punti rossi : brani con voto 0 (Dislike)
+        - punti grigi: brani con voto 2 (Neutro)
+        - punti verde chiaro (triangolo su): brani con voto 3 (Forse sì)
+        - punti rosso/arancione (triangolo giù): brani con voto 4 (Forse no)
         - sfondo colorato: probabilità di like stimata dal modello (da rosso/basso a verde/alto)
         - curva nera: decision boundary p = 0.5
         - curva grigia: p = 0.3 e p = 0.7
@@ -31,9 +34,12 @@ def plot_valence_energy_boundary(state: Dict):
         print("[Grafico] Le feature 'valence' ed 'energy' non sono disponibili: impossibile creare il grafico.")
         return
 
-    # Separo like e dislike
-    likes = user_history[user_history["vote"] == 1]
-    dislikes = user_history[user_history["vote"] == 0]
+    # Separo like, dislike, voti neutri e voti "forse"
+    likes = user_history[user_history["vote"] == 1]# like forte
+    dislikes = user_history[user_history["vote"] == 0] # dislike forte
+    neutrals = user_history[user_history["vote"] == 2] # indifferente
+    maybe_likes = user_history[user_history["vote"] == 3] # forse sì
+    maybe_dislikes = user_history[user_history["vote"] == 4] # forse no
 
     # Range del grafico rispetto ai dati osservati -> lo estendo con un padding per visibilità
     v_min, v_max = user_history["valence"].min(), user_history["valence"].max()
@@ -76,10 +82,20 @@ def plot_valence_energy_boundary(state: Dict):
 
     # Punti reali dell'utente
     if not likes.empty:
-        plt.scatter(likes["valence"], likes["energy"], c="green", label="Like (1)") # punti verdi
+        plt.scatter(likes["valence"], likes["energy"], c="green", label="Like") # punti verdi
+        
     if not dislikes.empty:
-        plt.scatter(dislikes["valence"], dislikes["energy"], c="red", label="Dislike (0)") # punti rossi
-
+        plt.scatter(dislikes["valence"], dislikes["energy"], c="red", label="Dislike") # punti rossi
+        
+    if not neutrals.empty:
+        plt.scatter(neutrals["valence"], neutrals["energy"], c="gray", label="Neutro") # punti grigi
+        
+    if not maybe_likes.empty:
+        plt.scatter(maybe_likes["valence"], maybe_likes["energy"], c="limegreen", marker="^", label="Forse sì")  # punti verde chiaro, triangolo su
+        
+    if not maybe_dislikes.empty:
+        plt.scatter( maybe_dislikes["valence"], maybe_dislikes["energy"], c="orangered", marker="v", label="Forse no")  # punti rosso/arancione, triangolo giù
+    
     plt.xlabel("Valence (felicità)")
     plt.ylabel("Energy (energia)")
     plt.title("AI DJ - Spazio Valence vs Energy e decision boundary del modello")
