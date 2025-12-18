@@ -46,16 +46,25 @@ def ask_user_vote(song: pd.Series) -> int:
     print("\nCanzone:")
     print(f"Titolo : {song['track_name']}")
     print(f"Artista: {song['artists']}")
-    print(f"Genere : {song['track_genre']}")
+    
+    # Uso sia il genere principale (macro-classe) sia il sottogenere
+    main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
+    sub_genre = song.get("sub_genre", song.get("track_genre", "N/A"))
+    print(f"Genere : {main_genre} ({sub_genre})")
     
     # Continuo a chiedere finché l'input non è valido
     while True:
-        vote = input("Ti piace? (1 = Sì, 0 = No, 2 = Indifferente): ")
-
-        if vote in ["0", "1", "2"]:
+        vote = input("Ti piace? (0 = No, 1 = Sì, 2 = Indifferente, 3 = Forse sì, 4 = Forse no): ")
+        # 0 = dislike forte
+        # 1 = like forte
+        # 2 = indifferente (non usato per addestrare il modello
+        # 3 = forse sì (like debole)
+        # 4 = forse no (dislike debole)
+        
+        if vote in ["0", "1", "2", "3", "4"]:
             return int(vote)
 
-        print("Input non valido. Inserisci solo 0 o 1")
+        print("Input non valido. Inserisci solo 0, 1, 2, 3 o 4")
         
 #Creo una nuova funzione che chiede all'utente il suo artista preferito in modo tale da avere già una lista di canzoni se questo è presente nel dataset
 def ask_favorite_artist() -> str | None:
@@ -72,6 +81,8 @@ def ask_favorite_artist() -> str | None:
     return artist if artist != "" else None
 
 
+#Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
+#(df-> dataset completo, n_songs-> numero di canzoni iniziali da votare)
 
 #Ora creo la funzione principale cold_start che mi permette di raccogliere i risultati delle votazioni dell'utente
 #(df-> dataset completo, n_songs-> numero di canzoni iniziali da votare)

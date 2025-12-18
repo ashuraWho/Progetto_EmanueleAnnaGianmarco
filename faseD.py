@@ -26,18 +26,25 @@ def interaction_step(
         f"Secondo i miei calcoli, questa ti piacerà al "
         f"{confidence * 100:.0f}%:"
     )
-    print(f"Ho scelto per te: {song['track_name']} - {song['artists']}")
+    print("\nLa mia canzone suggerita per te è:")
+    print(f"Titolo : {song['track_name']}")
+    print(f"Artista: {song['artists']}")
+    
+    # Uso sia il genere principale (macro-classe) sia il sottogenere
+    main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
+    sub_genre = song.get("sub_genre", song.get("track_genre", "N/A"))
+    print(f"Genere : {main_genre} ({sub_genre})")
 
     # Risposta dell'utente su quanto la canzone sia effettivamente azzeccata
     while True:
-        vote = input("Ti è piaciuta? (1 = Sì, 0 = No, Invio = esci): ")
+        vote = input("Ti è piaciuta? (0 = No, 1 = Sì, 2 = Indifferente, 3 = Forse sì, 4 = Forse no, Invio = esci): ")
         if vote == "":
             print("Esco dal loop di raccomandazioni.")
             return user_history, seen_tracks, None
-        if vote in ["0", "1"]:
+        if vote in ["0", "1", "2", "3", "4"]:
             vote = int(vote)
             break
-        print("Inserisci solo 0 o 1, oppure premi Invio per uscire.")
+        print("Inserisci solo 0, 1, 2, 3, 4 oppure premi Invio per uscire.")
 
     # Creo una nuova riga da aggiungere a user_history
     new_entry = {

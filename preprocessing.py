@@ -183,30 +183,55 @@ GENRE_MAP = {
 """
     Replica la logica del notebook:
       - rimozione valori mancanti
-      - aggregazione per (track_name, artists, album_name)
+      - aggregazione per (track_name, artists) con:
+          * media per le feature numeriche principali
+          * moda per le feature categoriche principali
 """
     
 def _drop_na_and_deduplicate(df: pd.DataFrame):
 
-    # Rimuovo eventuali righe con NaN
+    # Rimuovo eventuali righe con NaN (come nel notebook)
     df = df.dropna()
 
-    # Aggrego per brano/artista/album, come nel notebook
-    numeric_cols = df.select_dtypes(include="number").columns
-    non_numeric_cols = [
-        c for c in df.select_dtypes(exclude="number").columns
-        if c not in ["track_name", "artists", "album_name"]
-    ]
+    # Funzione di moda identica a quella definita nel notebook
+    def _mode(series: pd.Series):
+        return series.mode().iloc[0]
 
-    df = (
-        df.groupby(["track_name", "artists", "album_name"], as_index=False)
-        .agg({
-            **{c: "mean" for c in numeric_cols},
-            **{c: "first" for c in non_numeric_cols},
-        })
+    # Dizionario di aggregazione che replica esattamente il notebook
+    agg_dict = {
+        # ---------- FEATURE NUMERICHE → MEDIA ----------
+        "popularity": "mean",
+        "duration_ms": "mean",
+        "danceability": "mean",
+        "energy": "mean",
+        "loudness": "mean",
+        "speechiness": "mean",
+        "acousticness": "mean",
+        "instrumentalness": "mean",
+        "liveness": "mean",
+        "valence": "mean",
+        "tempo": "mean",
+
+        # ---------- FEATURE CATEGORICHE → MODA ----------
+        "album_name": _mode,
+        "track_genre": _mode,
+        "explicit": _mode,
+        "key": _mode,
+        "mode": _mode,
+        "time_signature": _mode,
+
+        # ---------- METADATO ----------
+        "track_id": "first",
+    }
+
+    # Deduplicazione semantica: una riga per coppia (track_name, artists)
+    df_dedup = (
+        df
+        .groupby(["track_name", "artists"], as_index=False)
+        .agg(agg_dict)
     )
-
-    return df
+    
+    return df_dedup
 
 # --------------------------------------------------------------------------------
 
@@ -265,7 +290,7 @@ def _add_engineered_features(df: pd.DataFrame):
 """
     Applica tutta la pipeline di pulizia + feature engineering del notebook:
 
-      1. Drop dei valori mancanti e deduplicazione per (track_name, artists, album_name)
+      1. Drop dei valori mancanti e deduplicazione per (track_name, artists)
       2. Aggiunta di colonne di genere musicale
       3. Aggiunta delle feature derivate
 
@@ -286,5 +311,3 @@ def load_and_preprocess_dataset(path: str): # Comoda se si vuole caricare e puli
     df = pd.read_csv(path)
     
     return preprocess_dataset(df)
-
-
