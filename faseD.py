@@ -32,7 +32,7 @@ def interaction_step(
     
     # Uso sia il genere principale (macro-classe) sia il sottogenere
     main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
-    sub_genre = song.get("sub_genre", song.get("track_genre", "N/A"))
+    sub_genre = song.get("track_genre")
     print(f"Genere : {main_genre} ({sub_genre})")
 
     # Risposta dell'utente su quanto la canzone sia effettivamente azzeccata

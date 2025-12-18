@@ -49,7 +49,7 @@ def ask_user_vote(song: pd.Series) -> int:
     
     # Uso sia il genere principale (macro-classe) sia il sottogenere
     main_genre = song.get("main_genre", song.get("track_genre", "N/A"))
-    sub_genre = song.get("sub_genre", song.get("track_genre", "N/A"))
+    sub_genre = song.get("track_genre")
     print(f"Genere : {main_genre} ({sub_genre})")
     
     # Continuo a chiedere finché l'input non è valido
