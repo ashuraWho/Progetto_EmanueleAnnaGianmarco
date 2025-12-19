@@ -56,18 +56,21 @@ def build_model(model_type: str, n_samples: int):
     
     if model_type == "mlp":
 
-        if n_samples < 200:
-            hidden = (16,) # architettura più semplice per pochi dati
+        if n_samples < 600:
+            hidden = (12,) # architettura più semplice per pochi dati
         else:
-            hidden = (32, 16) # architettura più complessa per più dati
+            hidden = (24, 12) # architettura più complessa per più dati
       
         clf = MLPClassifier(
             hidden_layer_sizes = hidden, # architettura adattiva in base ai campioni disponibili
             activation = "relu", # attivazione ReLU (Rectified Linear Unit) -> per catturare non-linearità complesse
             solver = "adam", # ottimizzatore stocastico adattivo -> Adam gestisce il learning rate da solo
-            max_iter = 300,
+            alpha = 0.1, # regolarizzazione L2: impedisce pesi eccessivi (evita sbalzi verso generi random)
+            learning_rate_init = 0.005, # passo leggermente più piccolo per addestramenti più stabili
+            max_iter = 500,
             early_stopping=True, # interrompe l'addestramento se non migliora
-            n_iter_no_change=15, # numero di iterazioni senza miglioramento per early stopping
+            validation_fraction = 0.1, # 10% dei dati per validazione interna
+            n_iter_no_change = 20, # numero di iterazioni senza miglioramento per early stopping
             random_state = 42
         )
         
@@ -140,7 +143,7 @@ def train_model(state: Dict): # qui (state) me lo sono immaginato come dizionari
     n_dislike = int(len(y) - n_like) # numero di dislike (0)
     n_samples = len(history_train) # numero totale di campioni
 
-    model_type = "rf" if len(state["user_history"]) < 80 or n_like < 15 or n_dislike < 15 else "mlp" # uso RF di default e abilito MLP solo se ho abbastanza dati
+    model_type = "rf" if len(state["user_history"]) < 300 or n_like < 60 or n_dislike < 60 else "mlp" # uso RF di default e abilito MLP solo se ho abbastanza dati
     state["model_type"] = model_type
     
     pipeline = build_model(state["model_type"], len(state["user_history"])) # vado a costruire il modello richiesto (RF o MLP) con scaler
